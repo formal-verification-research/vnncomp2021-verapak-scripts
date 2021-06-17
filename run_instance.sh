@@ -52,7 +52,7 @@ else
 	averages=""
 fi
 
-(sleep $TIMEOUT; sudo docker kill $CONTAINER 2> /dev/null && echo "timeout" > ~timeout && exit 124) & sudo docker run --rm --name "$CONTAINER" -t -v "$PWD:/verapak/tensorflow/in" verapak:latest ARFramework_main --root_dir="/verapak/tensorflow/in" --output_dir="${parameters[0]}" --graph="${parameters[1]}" --input_layer="${parameters[2]}" --output_layer="${parameters[3]}" --$radius_flag="${parameters[4]}" --$granularity_flag="${parameters[5]}" --initial_activation="${parameters[6]}" --label_proto="${parameters[7]}" $averages --num_threads=${parameters[9]} --num_abstractions=${parameters[10]} --fgsm_balance_factor=${parameters[11]} --modified_fgsm_dim_selection="${parameters[12]}" --refinement_dim_selection="${parameters[13]}" --label_layer="${parameters[14]}" --gradient_layer="${parameters[15]}" --terminate_on_counterexample=true
+(sleep $TIMEOUT; docker kill $CONTAINER 2> /dev/null && echo "timeout" > ~timeout && exit 124) & docker run --rm --name "$CONTAINER" -t -v "$PWD:/verapak/tensorflow/in" verapak:latest ARFramework_main --root_dir="/verapak/tensorflow/in" --output_dir="${parameters[0]}" --graph="${parameters[1]}" --input_layer="${parameters[2]}" --output_layer="${parameters[3]}" --$radius_flag="${parameters[4]}" --$granularity_flag="${parameters[5]}" --initial_activation="${parameters[6]}" --label_proto="${parameters[7]}" $averages --num_threads=${parameters[9]} --num_abstractions=${parameters[10]} --fgsm_balance_factor=${parameters[11]} --modified_fgsm_dim_selection="${parameters[12]}" --refinement_dim_selection="${parameters[13]}" --label_layer="${parameters[14]}" --gradient_layer="${parameters[15]}" --terminate_on_counterexample=true
 
 
 # Write results file
