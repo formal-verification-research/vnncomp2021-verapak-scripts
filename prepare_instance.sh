@@ -77,7 +77,7 @@ CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
 	echo "Do generation here"
-
+	LABELS_PATH="/"
 fi
 if [ "$CLASS_AVG_PATH" == "" ] ; then
 	if [[ "${PER_BENCHMARK[2]}" == "intellifeature" || "${PER_BENCHMARK[3]}" == "intellifeature" ]] ; then
@@ -104,9 +104,9 @@ ${ONNX_FILE}_tf.pb
 ${NODES_PARSED[0]}
  # Output Node <string>
 ${NODES_PARSED[1]}
- # Verification Radi(us/i) <float[]> (one per dim)
+ # Verification Radi(us/i) <float> (applied to all dims) or <float[]> (one per dim)
 $VNNRADII
- # Granularity <float[]> (one per dim)
+ # Granularity <float> (applied to all dims) or <float[]> (one per dim)
 ${PER_BENCHMARK[4]}
 
 # Protocol Buffers
@@ -131,7 +131,7 @@ ${PER_BENCHMARK[3]}
 
 # Other
  # Label Layer
-y_layer
+y_label
  # Gradient Layer
 gradient_out
 END

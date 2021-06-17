@@ -34,41 +34,31 @@ echo "Running benchmark instance in category '$CATEGORY' with onnx file '$ONNX_F
 readarray -t parameters <<< `grep -v "^[[:space:]]*#" verapak.conf | grep -v "^[[:space:]]*$"`
 
 # Run the tool
-VERAPAK_CMD="docker run --rm --name $CONTAINER -it -v $PWD:/verapak/tensorflow/in verapak:latest ARFramework_main \
---root_dir='/verapak/tensorflow/in' \
---output_dir='${parameters[0]}' \
---graph='${parameters[1]}' \
---input_layer='${parameters[2]}' \
---output_layer='${parameters[3]}' \
---verification_radius_array='${parameters[4]}' \
---granularity_array='${parameters[5]}' \
---initial_activation='${parameters[6]}' \
---label_proto='${parameters[7]}'"
-if [ "${parameters[6]}" == "/" ] ; then
-	VERAPAK_CMD="$VERAPAK_CMD --class_averages='${parameters[8]}'"
+if [ "${parameters[4]}" == *","* ] ; then
+	radius_flag="verification_radius_array"
+else
+	radius_flag="verification_radius"
 fi
-VERAPAK_CMD="$VERAPAK_CMD \
---num_threads='${parameters[9]}' \
---num_abstractions='${parameters[10]}' \
---fgsm_balance_factor='${parameters[11]}' \
---modified_fgsm_dim_selection='${parameters[12]}' \
---refinement_dim_selection='${parameters[13]}' \
---label_layer='${parameters[14]}' \
---gradient_layer='${parameters[15]}'
---terminate_on_counterexample=true"
 
-echo "$VERAPAK_CMD"
-
-timeout=false
-result=`(sleep $TIMEOUT; sudo docker kill $CONTAINER; sudo docker container rm $CONTAINER; timeout=true) & $VERAPAK_CMD`
-
-if timeout ; then
-	echo "timeout" > $RESULTS_FILE
-	exit 0
+if [ "${parameters[5]}" == *","* ] ; then
+	granularity_flag="granularity_array"
+else
+	granularity_flag="granularity"
 fi
+
+if [ "${parameters[8]}" != "/" ] ; then
+	averages=--class_averages="${parameters[8]}"
+else
+	averages=""
+fi
+
+(sleep $TIMEOUT; sudo docker kill $CONTAINER 2> /dev/null && echo "timeout" > ~timeout && exit 124) & sudo docker run --rm --name "$CONTAINER" -t -v "$PWD:/verapak/tensorflow/in" verapak:latest ARFramework_main --root_dir="/verapak/tensorflow/in" --output_dir="${parameters[0]}" --graph="${parameters[1]}" --input_layer="${parameters[2]}" --output_layer="${parameters[3]}" --$radius_flag="${parameters[4]}" --$granularity_flag="${parameters[5]}" --initial_activation="${parameters[6]}" --label_proto="${parameters[7]}" $averages --num_threads=${parameters[9]} --num_abstractions=${parameters[10]} --fgsm_balance_factor=${parameters[11]} --modified_fgsm_dim_selection="${parameters[12]}" --refinement_dim_selection="${parameters[13]}" --label_layer="${parameters[14]}" --gradient_layer="${parameters[15]}" --terminate_on_counterexample=true
+
 
 # Write results file
 RESULT_CODE=$?
+timeout=`cat ~timeout 2> /dev/null`
+(rm ~timeout 2> /dev/null)
 if [ $RESULT_CODE -eq 3 ] ; then
 	echo "violated" > $RESULTS_FILE
 elif [ $RESULT_CODE -eq 2 ] ; then
@@ -77,7 +67,11 @@ elif [ $RESULT_CODE -eq 1 ] ; then
 	echo "error" > $RESULTS_FILE
 elif [ $RESULT_CODE -eq 0 ] ; then
 	echo "holds" > $RESULTS_FILE
+elif [ "$timeout" == "timeout" ] ; then
+	echo "TIMEOUT : $TIMEOUT sec : exit_$RESULT_CODE"
+	echo "timeout" > $RESULTS_FILE
 else
 	echo "error_exit_code_$RESULT_CODE" > $RESULTS_FILE
 fi
 
+echo `cat $RESULTS_FILE`
