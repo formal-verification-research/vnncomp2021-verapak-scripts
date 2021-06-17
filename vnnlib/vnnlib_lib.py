@@ -67,15 +67,21 @@ class vnn():
                 print("MAT+: " + str(self.simple[0][0]))
             return "OTHER"
 
-        has_maximal = False
-        has_minimal = False
+        maximal = -1
+        minimal = -1
         invalid_maximal = False
         invalid_minimal = False
-        for n in self.simple[0][0][0]:
+        for i, n in enumerate(self.simple[0][0][0]):
             if n == len(self.simple[0][0][0]) - 1:
-                has_maximal = True
+                if maximal == -1:
+                    maximal = i
+                else:
+                    invalid_maximal = True
             elif n == -(len(self.simple[0][0][0]) - 1):
-                has_minimal = True
+                if minimal == -1:
+                    minimal = i
+                else:
+                    invalid_minimal = True
             elif n == 1:
                 invalid_maximal = True
             elif n == -1:
@@ -84,24 +90,24 @@ class vnn():
                 invalid_maximal = True
                 invalid_minimal = True
                 break
-        if has_maximal and invalid_maximal:
+        if maximal != -1 and invalid_maximal:
             if verbose:
                 print("FAIL: Has invalid maximal")
                 print("MAT+: " + str(self.simple[0][0]))
             return "OTHER"
-        if has_minimal and invalid_minimal:
+        if minimal != -1 and invalid_minimal:
             if verbose:
                 print("FAIL: Has invalid minimal")
                 print("MAT+: " + str(self.simple[0][0]))
             return "OTHER"
-        if has_maximal:
+        if maximal != -1:
             if verbose:
                 print("SUCC: Has valid maximal")
-            return "MAXIMAL"
-        if has_minimal:
+            return "MAXIMAL," + str(maximal)
+        if minimal != -1:
             if verbose:
                 print("SUCC: Has valid minimal")
-            return "MINIMAL"
+            return "MINIMAL," + str(minimal)
 
         if verbose:
             print("FAIL: No valid maximal or minimal")
@@ -147,12 +153,19 @@ if __name__ == "__main__":
         vcenter = v.get_centerpoint()
         vradii = v.get_radii()
         vtype = v.get_type(verbose=(verbose > 1))
+        vnum = None
+        if "," in vtype:
+            vt = vtype.split(",")
+            vtype = vt[0]
+            vnum = vt[1]
         if verbose == 2:
             print(v)
         elif verbose == 1:
             print("C:" + str(vcenter))
             print("R:" + str(vradii))
         print("T:" + str(vtype))
+        if vnum is not None:
+            print("N:" + str(vnum))
 
     else: # Multiple VNNLIBs
         typedict = {}
@@ -162,6 +175,11 @@ if __name__ == "__main__":
             for f in sys.argv[1:]:
                 v = vnn(f)
                 vtype = v.get_type(verbose=(verbose > 1))
+                vnum = None
+                if "," in vtype:
+                    vt = vtype.split(",")
+                    vtype = vt[0]
+                    vnum = vt[1]
                 if verbose == 2:
                     print(v)
                 elif verbose == 1:
@@ -171,12 +189,14 @@ if __name__ == "__main__":
                     print("R:" + str(vradii))
                 if verbose >= 0:
                     print("T:" + str(vtype))
+                    if vnum is not None:
+                        print("N:" + str(vnum))
                 if verbose == -1:
                     i += 1
                     sys.stderr.write("\r\033[1;31m" + str(i) + "\033[0m / \033[31m" + num + ("\033[0m (\033[36m%10.10s\033[0m) : \033[1;36m%10.10s\033[0m" % (f, vtype) ))
                 if vtype not in typedict:
                     typedict[vtype] = []
-                typedict[vtype].append(f)
+                typedict[vtype].append([f, vnum])
             if verbose == -1:
                 sys.stderr.write("\n")
         except KeyboardInterrupt:
@@ -187,5 +207,8 @@ if __name__ == "__main__":
             v = typedict[k]
             print("\033[1;35m" + str(k) + "\033[0m : \033[1;36m" + str(len(v)) + "\033[0m")
             for f in v:
-                print("    " + f)
+                if f[1] is None:
+                    print("    " + f[0])
+                else:
+                    print("%3.3s %s" % (f[1], f[0]))
             
