@@ -43,13 +43,13 @@ if [ $VNNTYPE == "OTHER" ] || [[ $VNNTYPE != "MINIMAL" && $VNNTYPE != "MAXIMAL" 
 fi
 
 # Convert ONNX to TF
-onnx-tf convert -i $ONNX_FILE -o ${ONNX_FILE}_tf
+onnx-tf convert -i $ONNX_FILE -o ${ONNX_FILE}_tf.pb
 
 # Wrangle the graph to have compatible nodes
 if [ $VNNTYPE == 2 ]; then
-	python GraphWrangler/main.py ${ONNX_FILE}_tf ${ONNX_FILE}_tf.pb True True  # Negate it so that it does minimal instead of maximal
+	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb __${ONNX_FILE}_tf.pb True True  # Negate it so that it does minimal instead of maximal
 else
-	python GraphWrangler/main.py ${ONNX_FILE}_tf ${ONNX_FILE}_tf.pb True False
+	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb __${ONNX_FILE}_tf.pb True False
 fi
 
 
@@ -61,7 +61,7 @@ OUTPUT_NODE=${PER_BENCHMARK[6]}
 
 # Find unspecified nodes
 if [[ "$INPUT_NODE" == "" || "$OUTPUT_NODE" == "" ]] ; then
-	IFS=$'\n' NODES_PARSED=(`python GraphWrangler/parse_nodes.py --disallow_prompt_user ${ONNX_FILE}_tf`)
+	IFS=$'\n' NODES_PARSED=(`python GraphWrangler/parse_nodes.py --disallow_prompt_user ${ONNX_FILE}_tf.pb`)
 fi
 
 if [ "$INPUT_NODE" == "" ] ; then
@@ -99,7 +99,7 @@ cat > verapak.conf <<-END
 /out
 
 # Graph
-${ONNX_FILE}_tf.pb
+__${ONNX_FILE}_tf.pb
  # Input Node <string>
 ${NODES_PARSED[0]}
  # Output Node <string>
