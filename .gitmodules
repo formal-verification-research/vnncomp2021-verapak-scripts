@@ -1,0 +1,3 @@
+[submodule "GraphWrangler"]
+	path = GraphWrangler
+	url = git@github.com:formal-verification-research/graphwrangler.git
