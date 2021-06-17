@@ -4,6 +4,9 @@
 TOOL_NAME=verapak
 VERSION_STRING=v1
 
+CONTAINER="verapak_container"
+IMAGE="verapak:latest"
+
 # check arguments
 if [ "$#" -ne 4 ]; then
 	echo "Expected four arguments (got $#): '$VERSION_STRING' (version string), benchmark_category, onnx_file, vnnlib_file"
@@ -23,6 +26,9 @@ echo "Preparing $TOOL_NAME for benchmark instance in category '$CATEGORY' with o
 
 # Kill any zombie processes
 killall -q python
+docker kill $CONTAINER
+docker stop $CONTAINER
+docker container rm $CONTAINER
 
 # Check whether the VNNLIB can be processed, and save the type
 IFS=$'\n' VNN_PARSED=(`python vnnlib/vnnlib_lib.py -v $VNNLIB_FILE`)
@@ -70,13 +76,24 @@ CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
+	echo "Do generation here"
 
 fi
 if [ "$CLASS_AVG_PATH" == "" ] ; then
-
+	if [[ "${PER_BENCHMARK[2]}" == "intellifeature" || "${PER_BENCHMARK[3]}" == "intellifeature" ]] ; then
+		echo "Must have a Class Averages .pb file in order to use Intellifeature"
+		exit 1
+	else
+		CLASS_AVG_PATH=$'/'
+	fi
 fi
 
 
+# Generate Initial Activation Point
+INITIAL_POINT="/"
+
+
+# Write config file
 cat > verapak.conf <<-END
 # Output Directory
 /out
@@ -87,17 +104,17 @@ ${ONNX_FILE}_tf.pb
 ${NODES_PARSED[0]}
  # Output Node <string>
 ${NODES_PARSED[1]}
- # Initial Activation Point <float[]>
-$VNNCENTER
- # Verification Radi(us/i) <float> (applied to all dims) or <float[]> (one per dim)
+ # Verification Radi(us/i) <float[]> (one per dim)
 $VNNRADII
- # Granularity <float> (applied to all dims) or <float[]> (one per dim)
+ # Granularity <float[]> (one per dim)
 ${PER_BENCHMARK[4]}
 
 # Protocol Buffers
+ # Initial Activation Point <string : filepath>
+$INITIAL_POINT
  # Label <string : filepath>
 $LABELS_PATH
- # Class Averages <string : filepath>
+ # Class Averages <string : filepath> (Only required when using Intellifeature : Use a single / to denote no value)
 $CLASS_AVG_PATH
 
 # Optimization
