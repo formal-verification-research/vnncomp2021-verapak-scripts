@@ -42,6 +42,8 @@ if [ $VNNTYPE == "OTHER" ] || [[ $VNNTYPE != "MINIMAL" && $VNNTYPE != "MAXIMAL" 
 	exit 1 # Skip this one
 fi
 
+VNNNUM=${VNN_PARSED[3]/'N:'/''}
+
 # Convert ONNX to TF
 onnx-tf convert -i $ONNX_FILE -o ${ONNX_FILE}_tf.pb
 
@@ -130,10 +132,12 @@ ${PER_BENCHMARK[2]}
 ${PER_BENCHMARK[3]}
 
 # Other
- # Label Layer
+ # Label Layer <string>
 y_label
- # Gradient Layer
+ # Gradient Layer <string>
 gradient_out
+ # Intended output <int> (TODO: Use this, and maybe make it optional)
+${VNNNUM}
 END
 
 
