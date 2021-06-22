@@ -27,7 +27,8 @@ source activate tensorflow_p37
 git submodule update --init --recursive
 docker build -t onnx-tf:latest -f Dockerfile.onnxtf .
 
-export PATH=$PATH:$PWD
+ln -s $PWD/onnx-tf /usr/local/bin/onnx-tf
+ln -s $PWD/verapak /usr/local/bin/verapak
 
 # install Verapak
 git clone https://github.com/formal-verification-research/ARFramework.git
