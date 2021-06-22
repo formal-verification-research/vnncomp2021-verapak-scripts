@@ -2,4 +2,4 @@
 
 args=$@
 
-docker run --rm -it -v $PWD:$PWD -w $PWD --user "$(id -u):$(id -g)" verapak:latest bash -c "ARFramework_main $args"
+docker run --rm -it -v $PWD:$PWD -w $PWD verapak:latest bash -c "ARFramework_main $args"
