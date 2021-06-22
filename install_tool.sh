@@ -17,9 +17,16 @@ fi
 echo "Installing $TOOL_NAME"
 DIR=$(dirname $(realpath $0))
 
-apt-get install -y python python-pip &&
-apt-get install -y python3 &&
-apt-get install -y psmisc && # for killall, used in prepare_instance.sh script
+#apt-get install -y python python-pip &&
+#apt-get install -y python3 &&
+#apt-get install -y psmisc && # for killall, used in prepare_instance.sh script
 
-pip install -r "$DIR/requirements.txt" &&
-cd onnx-tensorflow && pip install -e . && cd .. ## ONNX-TF
+source activate tensorflow_p37
+
+pip2 install -r "$DIR/requirements.txt" &&
+git submodule update --init --recursive
+(cd onnx-tensorflow && pip2 install -e .)
+
+# install Verapak
+git clone https://github.com/formal-verification-research/ARFramework.git
+(cd ARFramework && docker build -t verapak:latest .)
