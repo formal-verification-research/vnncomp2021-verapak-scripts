@@ -24,6 +24,7 @@ DIR=$(dirname $(realpath $0))
 source activate tensorflow_p37
 
 #pip2 install -r "$DIR/requirements.txt" &&
+git submodule update --init --recursive
 docker build -t onnx-tf:latest -f Dockerfile.onnxtf .
 
 export PATH=$PATH:$PWD

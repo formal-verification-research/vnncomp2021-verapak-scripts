@@ -2,4 +2,4 @@
 
 args=$@
 
-docker run --rm -it -v $PWD:$PWD -w $PWD onnx-tf:latest bash -c "onnx-tf $args"
+docker run --rm -it -v $PWD:$PWD -w $PWD --user "$(id -u):$(id -g)" onnx-tf:latest bash -c "onnx-tf $args"
