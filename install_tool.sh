@@ -26,8 +26,9 @@ source activate tensorflow_p37
 #pip2 install -r "$DIR/requirements.txt" &&
 docker build -t onnx-tf:latest -f Dockerfile.onnxtf .
 
+export PATH=$PATH:$PWD
+
 # install Verapak
 git clone https://github.com/formal-verification-research/ARFramework.git
 (cd ARFramework && docker build -t verapak:latest .)
 
-export PATH=$PATH:$PWD
