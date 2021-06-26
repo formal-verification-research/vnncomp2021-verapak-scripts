@@ -26,12 +26,14 @@ source activate tensorflow_p37
 #pip2 install -r "$DIR/requirements.txt" &&
 git submodule update --init --recursive
 docker build -t onnx-tf:latest -f Dockerfile.onnxtf .
+docker build -t pb_creator:latest -f Dockerfile.pb_creator
 
 (cd GraphWrangler && docker build -t graph_wrangler:latest .)
 
 ln -s $PWD/onnx-tf /usr/local/bin/onnx-tf
 ln -s $PWD/verapak /usr/local/bin/verapak
 ln -s $PWD/GraphWrangler/graph_wrangler /usr/local/bin/graph_wrangler
+ln -s $PWD/pb_creator /usr/local/bin/pb_creator
 
 # install Verapak
 git clone https://github.com/formal-verification-research/ARFramework.git
