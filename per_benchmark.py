@@ -29,12 +29,22 @@ def parse_benchmark_text(s, x_var=None):
         csv = False
     
     t = t.split(",")
-    for i in range(0, len(t)):
-        if t[i].endswith("x") and x_var is not None:
-            if csv:
-                t[i] = str(float(t[i][:-1]) * x_var[i])
+    if len(t) > 1:
+        for i in range(0, len(t)):
+            if t[i].endswith("x") and x_var is not None:
+                if csv:
+                    t[i] = str(float(t[i][:-1]) * x_var[i])
+                else:
+                    t[i] = str(float(t[i][:-1]) * x_var)
+    else:
+        if t[0].endswith("x"):
+            if x_var is not None:
+                c = float(t[0][:-1])
+                t = x_var
+                for i in range(0, len(t)):
+                    t[i] = str(float(t[i]) * c)
             else:
-                t[i] = str(float(t[i][:-1]) * x_var)
+                t[0] = t[0][:-1]
     s[4] = ",".join(t)
 
     return "\n".join(s)

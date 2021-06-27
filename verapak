@@ -1,0 +1,5 @@
+#!/bin/bash
+
+args=$@
+
+docker run --rm -it -v $PWD:$PWD -w $PWD verapak:latest bash -c "ARFramework_main $args"
