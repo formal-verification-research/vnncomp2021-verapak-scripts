@@ -49,9 +49,9 @@ onnx-tf convert -i $ONNX_FILE -o ${ONNX_FILE}_tf.pb
 
 # Wrangle the graph to have compatible nodes
 if [ $VNNTYPE == 2 ]; then
-	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb __${ONNX_FILE}_tf.pb True True  # Negate it so that it does minimal instead of maximal
+	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb ${ONNX_FILE}__tf.pb True True  # Negate it so that it does minimal instead of maximal
 else
-	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb __${ONNX_FILE}_tf.pb True False
+	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb ${ONNX_FILE}__tf.pb True False
 fi
 
 
@@ -119,7 +119,7 @@ cat > verapak.conf <<-END
 /out
 
 # Graph
-__${ONNX_FILE}_tf.pb
+${ONNX_FILE}__tf.pb
  # Input Node <string>
 ${NODES_PARSED[0]}
  # Output Node <string>
