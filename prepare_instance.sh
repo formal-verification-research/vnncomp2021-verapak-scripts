@@ -78,19 +78,19 @@ CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
-	OUTPUT_SHAPE=`GraphWrangler/get_node_shape.py ${ONNX_FILE}_tf.pb $OUTPUT_NODE` # Double check that the output is a csv
+	OUTPUT_SHAPE=`GraphWrangler/get_node_shape.py ${ONNX_FILE}_tf.pb $OUTPUT_NODE`
 	OUTPUT_SHAPE=${OUTPUT_SHAPE//?/1}
 	IFS=', ' read -a LABEL_DIMS <<< "$OUTPUT_SHAPE"
 	LABEL_VALUES=()
 	LABEL_DIM=1
-	for LABEL_DIM_N in ${LABEL_DIMS[@]} do
+	for LABEL_DIM_N in ${LABEL_DIMS[@]} ; do
 		LABEL_DIM=`bc -l <<< "$LABEL_DIM * $LABEL_DIM_N"`
 	done
-	for i in {1..$LABEL_DIM} do
-		if [ $i == "$VNNNUM" ] ; then
-			LABEL_VALUES += "1"
+	for it in $(seq 1 $LABEL_DIM) ; do
+		if [ $it == "$VNNNUM" ] ; then
+			LABEL_VALUES=(${LABEL_VALUES[@]} "1")
 		else
-			LABEL_VALUES += "0"
+			LABEL_VALUES=(${LABEL_VALUES[@]} "0")
 		fi
 	done
 	pb_creator --shape="${OUTPUT_SHAPE//' '/}" --value="$(IFS=, ; echo ${LABEL_VALUES[*]})" --output="labels.pb"
@@ -107,7 +107,7 @@ fi
 
 
 # Generate Initial Activation Point
-INPUT_SHAPE=`GraphWrangler/get_node_shape.py $INPUT_NODE` # Double check that the output is a csv
+INPUT_SHAPE=`GraphWrangler/get_node_shape.py $INPUT_NODE`
 INPUT_SHAPE=${INPUT_SHAPE//?/1}
 pb_creator --shape="${INPUT_SHAPE//' '/}" --value="$VNNCENTER" --output="initial_activation_point.pb"
 INITIAL_POINT="initial_activation_point.pb"
