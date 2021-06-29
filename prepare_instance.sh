@@ -53,9 +53,9 @@ onnx-tf convert -i net.onnx -o net_tf.pb
 # Wrangle the graph to have compatible nodes
 echo "Wrangle net_tf.pb -> __net_tf.pb"
 if [ $VNNTYPE == 2 ]; then
-	python GraphWrangler/main.py net_tf.pb __net_tf.pb True True  # Negate it so that it does minimal instead of maximal
+	graph_wrangler main.py net_tf.pb __net_tf.pb True True  # Negate it so that it does minimal instead of maximal
 else
-	python GraphWrangler/main.py net_tf.pb __net_tf.pb True False
+	graph_wrangler main.py net_tf.pb __net_tf.pb True False
 fi
 
 
@@ -64,11 +64,10 @@ IFS=$'\n' PER_BENCHMARK=(`python per_benchmark.py benchmarks.conf $CATEGORY $VNN
 
 INPUT_NODE=${PER_BENCHMARK[5]}
 OUTPUT_NODE=${PER_BENCHMARK[6]}
-echo "Input $INPUT_NODE, Output $OUTPUT_NODE"
 
 # Find unspecified nodes
 if [[ "$INPUT_NODE" == "" || "$OUTPUT_NODE" == "" ]] ; then
-	IFS=$'\n' NODES_PARSED=(`python GraphWrangler/parse_nodes.py --disallow_prompt_user net_tf.pb`)
+	IFS=' ' NODES_PARSED=(`graph_wrangler parse_nodes.py --disallow_prompt_user net_tf.pb`)
 fi
 
 if [ "$INPUT_NODE" == "" ] ; then
@@ -78,12 +77,14 @@ if [ "$OUTPUT_NODE" == "" ] ; then
 	OUTPUT_NODE=${NODES_PARSED[1]}
 fi
 
+echo "Input $INPUT_NODE, Output $OUTPUT_NODE"
+
 LABELS_PATH=${PER_BENCHMARK[5]}
 CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
-	OUTPUT_SHAPE=`python GraphWrangler/get_node_shape.py net_tf.pb $OUTPUT_NODE`
+	OUTPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $OUTPUT_NODE`
 	OUTPUT_SHAPE=${OUTPUT_SHAPE//?/1}
 	IFS=', ' read -a LABEL_DIMS <<< "$OUTPUT_SHAPE"
 	LABEL_VALUES=()
@@ -112,7 +113,7 @@ fi
 
 
 # Generate Initial Activation Point
-INPUT_SHAPE=`python GraphWrangler/get_node_shape.py net_tf.pb $INPUT_NODE`
+INPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $INPUT_NODE`
 INPUT_SHAPE=${INPUT_SHAPE//?/1}
 pb_creator --shape="${INPUT_SHAPE//' '/}" --value="$VNNCENTER" --output="initial_activation_point.pb"
 INITIAL_POINT="initial_activation_point.pb"
