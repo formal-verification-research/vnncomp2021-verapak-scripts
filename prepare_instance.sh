@@ -85,8 +85,10 @@ CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
 	OUTPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $OUTPUT_NODE`
-	OUTPUT_SHAPE=${OUTPUT_SHAPE//?/1}
+	OUTPUT_SHAPE=${OUTPUT_SHAPE//'?'/1}
 	IFS=', ' read -a LABEL_DIMS <<< "$OUTPUT_SHAPE"
+	
+	# Section below not working properly
 	LABEL_VALUES=()
 	LABEL_DIM=1
 	for LABEL_DIM_N in ${LABEL_DIMS[@]} ; do
@@ -99,7 +101,9 @@ if [ "$LABELS_PATH" == "" ] ; then
 			LABEL_VALUES=(${LABEL_VALUES[@]} "0")
 		fi
 	done
-	pb_creator --shape="${OUTPUT_SHAPE//' '/}" --value="$(IFS=, ; echo ${LABEL_VALUES[*]})" --output="labels.pb"
+	# Section above not working properly
+
+	pb_creator --shape="${OUTPUT_SHAPE//[$'\t\r\n ']}" --value="`delim=""; for n in ${LABEL_VALUES[@]}; do printf '%s' "$delim$n"; delim=","; done`" --output="labels.pb"
 	LABELS_PATH="labels.pb"
 fi
 if [ "$CLASS_AVG_PATH" == "" ] ; then
@@ -114,8 +118,8 @@ fi
 
 # Generate Initial Activation Point
 INPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $INPUT_NODE`
-INPUT_SHAPE=${INPUT_SHAPE//?/1}
-pb_creator --shape="${INPUT_SHAPE//' '/}" --value="$VNNCENTER" --output="initial_activation_point.pb"
+INPUT_SHAPE=${INPUT_SHAPE//'?'/1}
+pb_creator --shape="${INPUT_SHAPE//[$'\t\r\n ']}" --value="$VNNCENTER" --output="initial_activation_point.pb"
 INITIAL_POINT="initial_activation_point.pb"
 
 
