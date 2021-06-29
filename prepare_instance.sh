@@ -84,7 +84,7 @@ if [ "$LABELS_PATH" == "" ] ; then
 	LABEL_VALUES=()
 	LABEL_DIM=1
 	for LABEL_DIM_N in ${LABEL_DIMS[@]} do
-		LABEL_DIM = `bc -l <<< "$LABEL_DIM * $LABEL_DIM_N"`
+		LABEL_DIM=`bc -l <<< "$LABEL_DIM * $LABEL_DIM_N"`
 	done
 	for i in {1..$LABEL_DIM} do
 		if [ $i == "$VNNNUM" ] ; then
