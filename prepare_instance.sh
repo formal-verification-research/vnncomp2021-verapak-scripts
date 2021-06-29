@@ -45,13 +45,17 @@ fi
 VNNNUM=${VNN_PARSED[3]/'N:'/''}
 
 # Convert ONNX to TF
-onnx-tf convert -i $ONNX_FILE -o ${ONNX_FILE}_tf.pb
+echo "Copy $ONNX_FILE -> ./net.onnx"
+cp $ONNX_FILE ./net.onnx
+echo "Convert net.onnx -> net_tf.pb"
+onnx-tf convert -i net.onnx -o net_tf.pb
 
 # Wrangle the graph to have compatible nodes
+echo "Wrangle net_tf.pb -> __net_tf.pb"
 if [ $VNNTYPE == 2 ]; then
-	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb ${ONNX_FILE}__tf.pb True True  # Negate it so that it does minimal instead of maximal
+	python GraphWrangler/main.py net_tf.pb __net_tf.pb True True  # Negate it so that it does minimal instead of maximal
 else
-	python GraphWrangler/main.py ${ONNX_FILE}_tf.pb ${ONNX_FILE}__tf.pb True False
+	python GraphWrangler/main.py net_tf.pb __net_tf.pb True False
 fi
 
 
@@ -60,10 +64,11 @@ IFS=$'\n' PER_BENCHMARK=(`python per_benchmark.py benchmarks.conf $CATEGORY $VNN
 
 INPUT_NODE=${PER_BENCHMARK[5]}
 OUTPUT_NODE=${PER_BENCHMARK[6]}
+echo "Input $INPUT_NODE, Output $OUTPUT_NODE"
 
 # Find unspecified nodes
 if [[ "$INPUT_NODE" == "" || "$OUTPUT_NODE" == "" ]] ; then
-	IFS=$'\n' NODES_PARSED=(`python GraphWrangler/parse_nodes.py --disallow_prompt_user ${ONNX_FILE}_tf.pb`)
+	IFS=$'\n' NODES_PARSED=(`python GraphWrangler/parse_nodes.py --disallow_prompt_user net_tf.pb`)
 fi
 
 if [ "$INPUT_NODE" == "" ] ; then
@@ -78,7 +83,7 @@ CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
-	OUTPUT_SHAPE=`GraphWrangler/get_node_shape.py ${ONNX_FILE}_tf.pb $OUTPUT_NODE`
+	OUTPUT_SHAPE=`python GraphWrangler/get_node_shape.py net_tf.pb $OUTPUT_NODE`
 	OUTPUT_SHAPE=${OUTPUT_SHAPE//?/1}
 	IFS=', ' read -a LABEL_DIMS <<< "$OUTPUT_SHAPE"
 	LABEL_VALUES=()
@@ -107,7 +112,7 @@ fi
 
 
 # Generate Initial Activation Point
-INPUT_SHAPE=`GraphWrangler/get_node_shape.py $INPUT_NODE`
+INPUT_SHAPE=`python GraphWrangler/get_node_shape.py net_tf.pb $INPUT_NODE`
 INPUT_SHAPE=${INPUT_SHAPE//?/1}
 pb_creator --shape="${INPUT_SHAPE//' '/}" --value="$VNNCENTER" --output="initial_activation_point.pb"
 INITIAL_POINT="initial_activation_point.pb"
@@ -119,7 +124,7 @@ cat > verapak.conf <<-END
 /out
 
 # Graph
-${ONNX_FILE}__tf.pb
+__net_tf.pb
  # Input Node <string>
 ${NODES_PARSED[0]}
  # Output Node <string>
