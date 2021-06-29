@@ -26,7 +26,7 @@ source activate tensorflow_p37
 #pip2 install -r "$DIR/requirements.txt" &&
 git submodule update --init --recursive
 docker build -t onnx-tf:latest -f Dockerfile.onnxtf .
-docker build -t pb_creator:latest -f Dockerfile.pb_creator
+docker build -t pb_creator:latest -f Dockerfile.pb_creator .
 
 (cd GraphWrangler && docker build -t graph_wrangler:latest .)
 
