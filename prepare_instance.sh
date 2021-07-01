@@ -9,12 +9,12 @@ IMAGE="verapak:latest"
 
 # check arguments
 if [ "$#" -ne 4 ]; then
-	echo "Expected four arguments (got $#): '$VERSION_STRING' (version string), benchmark_category, onnx_file, vnnlib_file"
+	echo "Expected 4 arguments (got $#): \"$VERSION_STRING\" <category> <model.onnx> <specs.vnnlib>"
 	exit 1
 fi
 
 if [ "$1" != ${VERSION_STRING} ]; then
-	echo "Expected first argument (version string) '$VERSION_STRING', got '$1'"
+	echo "Expected first argument to be the version string '$VERSION_STRING', instead got '$1'"
 	exit 1
 fi
 
@@ -26,9 +26,7 @@ echo "Preparing $TOOL_NAME for benchmark instance in category '$CATEGORY' with o
 
 # Kill any zombie processes
 killall -q python
-docker kill $CONTAINER
-docker stop $CONTAINER
-docker container rm $CONTAINER
+components/cleanup.sh v1 $CONTAINER
 
 # Check whether the VNNLIB can be processed, and save the type
 IFS=$'\n' VNN_PARSED=(`python vnnlib/vnnlib_lib.py -v $VNNLIB_FILE`)
@@ -45,17 +43,14 @@ fi
 VNNNUM=${VNN_PARSED[3]/'N:'/''}
 
 # Convert ONNX to TF
-echo "Copy $ONNX_FILE -> ./net.onnx"
-cp $ONNX_FILE ./net.onnx
-echo "Convert net.onnx -> net_tf.pb"
-onnx-tf convert -i net.onnx -o net_tf.pb
+components/convert_onnx.sh $ONNX_FILE net_tf.pb
 
 # Wrangle the graph to have compatible nodes
 echo "Wrangle net_tf.pb -> __net_tf.pb"
 if [ $VNNTYPE == 2 ]; then
-	graph_wrangler main.py net_tf.pb __net_tf.pb True True  # Negate it so that it does minimal instead of maximal
+	components/wrangle.sh v1 net_tf.pb __net_tf.pb True # Negate it so that it does minimal instead of maximal
 else
-	graph_wrangler main.py net_tf.pb __net_tf.pb True False
+	components/wrangle.sh v1 net_tf.pb __net_tf.pb
 fi
 
 
@@ -66,15 +61,11 @@ INPUT_NODE=${PER_BENCHMARK[5]}
 OUTPUT_NODE=${PER_BENCHMARK[6]}
 
 # Find unspecified nodes
-if [[ "$INPUT_NODE" == "" || "$OUTPUT_NODE" == "" ]] ; then
-	IFS=' ' NODES_PARSED=(`graph_wrangler parse_nodes.py --disallow_prompt_user net_tf.pb`)
-fi
-
 if [ "$INPUT_NODE" == "" ] ; then
-	INPUT_NODE=${NODES_PARSED[0]}
+	INPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --input net_tf.pb`
 fi
 if [ "$OUTPUT_NODE" == "" ] ; then
-	OUTPUT_NODE=${NODES_PARSED[1]}
+	OUTPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --output net_tf.pb`
 fi
 
 echo "Input $INPUT_NODE, Output $OUTPUT_NODE"
@@ -84,26 +75,8 @@ CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
-	OUTPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $OUTPUT_NODE`
-	OUTPUT_SHAPE=${OUTPUT_SHAPE//'?'/1}
-	IFS=', ' read -a LABEL_DIMS <<< "$OUTPUT_SHAPE"
-	
-	# Section below not working properly
-	LABEL_VALUES=()
-	LABEL_DIM=1
-	for LABEL_DIM_N in ${LABEL_DIMS[@]} ; do
-		LABEL_DIM=`bc -l <<< "$LABEL_DIM * $LABEL_DIM_N"`
-	done
-	for it in $(seq 1 $LABEL_DIM) ; do
-		if [ $it == "$VNNNUM" ] ; then
-			LABEL_VALUES=(${LABEL_VALUES[@]} "1")
-		else
-			LABEL_VALUES=(${LABEL_VALUES[@]} "0")
-		fi
-	done
-	# Section above not working properly
-
-	pb_creator --shape="${OUTPUT_SHAPE//[$'\t\r\n ']}" --value="`delim=""; for n in ${LABEL_VALUES[@]}; do printf '%s' "$delim$n"; delim=","; done`" --output="labels.pb"
+	OUTPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $OUTPUT_NODE | tr -cd [:print:]`
+	components/generate_labels.sh v1 labels.pb $OUTPUT_SHAPE $VNNNUM
 	LABELS_PATH="labels.pb"
 fi
 if [ "$CLASS_AVG_PATH" == "" ] ; then
