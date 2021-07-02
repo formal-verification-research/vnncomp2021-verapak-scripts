@@ -9,8 +9,8 @@ if [ "$1" != ${VERSION_STRING} ]; then
 	exit 1
 fi
 
-if [ "$#" -ne 2 ]; then
-	echo "Expected 2 arguments (got $#): \"$VERSION_STRING\" <in.onnx> <out.pb>"
+if [ "$#" -ne 3 ]; then
+	echo "Expected 3 arguments (got $#): \"$VERSION_STRING\" <in.onnx> <out.pb>"
 	exit 1
 fi
 
