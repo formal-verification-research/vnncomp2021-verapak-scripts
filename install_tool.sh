@@ -30,10 +30,10 @@ docker build -t pb_creator:latest -f Dockerfile.pb_creator .
 
 (cd GraphWrangler && docker build -t graph_wrangler:latest .)
 
-ln -s $PWD/onnx-tf /usr/local/bin/onnx-tf
-ln -s $PWD/verapak /usr/local/bin/verapak
-ln -s $PWD/GraphWrangler/graph_wrangler /usr/local/bin/graph_wrangler
-ln -s $PWD/pb_creator /usr/local/bin/pb_creator
+ln -s $PWD/lib/onnx-tf /usr/local/bin/onnx-tf
+ln -s $PWD/lib/verapak /usr/local/bin/verapak
+ln -s $PWD/lib/GraphWrangler/graph_wrangler /usr/local/bin/graph_wrangler
+ln -s $PWD/lib/pb_creator /usr/local/bin/pb_creator
 
 # install Verapak
 git clone https://github.com/formal-verification-research/ARFramework.git

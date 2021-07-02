@@ -1,8 +1,8 @@
 [submodule "GraphWrangler"]
-	path = GraphWrangler
+	path = lib/GraphWrangler
 	url = https://github.com/formal-verification-research/graphwrangler.git
 [submodule "onnx-tensorflow"]
-	path = onnx-tensorflow
+	path = lib/onnx-tensorflow
 	url = https://github.com/onnx/onnx-tensorflow.git
 [submodule "vnncomp2021"]
 	path = vnncomp2021

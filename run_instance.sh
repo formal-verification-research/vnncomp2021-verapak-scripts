@@ -6,6 +6,7 @@ VERSION_STRING=v1
 
 CONTAINER="verapak_container"
 IMAGE="verapak:latest"
+CONFIG_FILE="out/verapak.conf"
 
 # check arguments
 if [ "$#" -ne 6 ]; then
@@ -31,7 +32,7 @@ echo "Running benchmark instance in category '$CATEGORY' with onnx file '$ONNX_F
 #export PYTHONPATH="$PYTHONPATH:$DIR/src"
 
 # Read parameters from file
-readarray -t parameters <<< `grep -v "^[[:space:]]*#" verapak.conf | grep -v "^[[:space:]]*$"`
+readarray -t parameters <<< `grep -v "^[[:space:]]*#" $CONFIG_FILE | grep -v "^[[:space:]]*$"`
 
 # Run the tool
 if [ "${parameters[4]}" == *","* ] ; then

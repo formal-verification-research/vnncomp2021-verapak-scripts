@@ -26,10 +26,10 @@ echo "Preparing $TOOL_NAME for benchmark instance in category '$CATEGORY' with o
 
 # Kill any zombie processes
 killall -q python
-components/cleanup.sh v1 $CONTAINER
+. components/cleanup.sh v1 $CONTAINER
 
 # Check whether the VNNLIB can be processed, and save the type
-IFS=$'\n' VNN_PARSED=(`python vnnlib/vnnlib_lib.py -v $VNNLIB_FILE`)
+IFS=$'\n' VNN_PARSED=(`python lib/vnnlib/vnnlib_lib.py -v $VNNLIB_FILE`)
 VNNCENTER=`tr -d 'C:[ ]' <<< ${VNN_PARSED[0]}`
 VNNRADII=`tr -d 'R:[ ]' <<< ${VNN_PARSED[1]}`
 VNNTYPE=${VNN_PARSED[2]/'T:'/''}
@@ -43,29 +43,29 @@ fi
 VNNNUM=${VNN_PARSED[3]/'N:'/''}
 
 # Convert ONNX to TF
-components/convert_onnx.sh $ONNX_FILE net_tf.pb
+. components/convert_onnx.sh v1 $ONNX_FILE out/net_tf.pb
 
 # Wrangle the graph to have compatible nodes
 echo "Wrangle net_tf.pb -> __net_tf.pb"
 if [ $VNNTYPE == 2 ]; then
-	components/wrangle.sh v1 net_tf.pb __net_tf.pb True # Negate it so that it does minimal instead of maximal
+	. components/wrangle.sh v1 out/net_tf.pb out/__net_tf.pb True # Negate it so that it does minimal instead of maximal
 else
-	components/wrangle.sh v1 net_tf.pb __net_tf.pb
+	. components/wrangle.sh v1 out/net_tf.pb out/__net_tf.pb
 fi
 
 
 # Generate Config file
-IFS=$'\n' PER_BENCHMARK=(`python per_benchmark.py benchmarks.conf $CATEGORY $VNNRADII`)
+IFS=$'\n' PER_BENCHMARK=(`python lib/per_benchmark.py benchmarks.conf $CATEGORY $VNNRADII`)
 
 INPUT_NODE=${PER_BENCHMARK[5]}
 OUTPUT_NODE=${PER_BENCHMARK[6]}
 
 # Find unspecified nodes
 if [ "$INPUT_NODE" == "" ] ; then
-	INPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --input net_tf.pb`
+	INPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --input out/net_tf.pb`
 fi
 if [ "$OUTPUT_NODE" == "" ] ; then
-	OUTPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --output net_tf.pb`
+	OUTPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --output out/net_tf.pb`
 fi
 
 echo "Input $INPUT_NODE, Output $OUTPUT_NODE"
@@ -75,9 +75,9 @@ CLASS_AVG_PATH=${PER_BENCHMARK[6]}
 
 # Generate unspecified protocol buffers
 if [ "$LABELS_PATH" == "" ] ; then
-	OUTPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $OUTPUT_NODE | tr -cd [:print:]`
-	components/generate_labels.sh v1 labels.pb $OUTPUT_SHAPE $VNNNUM
-	LABELS_PATH="labels.pb"
+	OUTPUT_SHAPE=`graph_wrangler get_node_shape.py out/net_tf.pb $OUTPUT_NODE | tr -cd [:print:]`
+	. components/generate_labels.sh v1 out/labels.pb $OUTPUT_SHAPE $VNNNUM
+	LABELS_PATH="out/labels.pb"
 fi
 if [ "$CLASS_AVG_PATH" == "" ] ; then
 	if [[ "${PER_BENCHMARK[2]}" == "intellifeature" || "${PER_BENCHMARK[3]}" == "intellifeature" ]] ; then
@@ -90,19 +90,19 @@ fi
 
 
 # Generate Initial Activation Point
-INPUT_SHAPE=`graph_wrangler get_node_shape.py net_tf.pb $INPUT_NODE`
+INPUT_SHAPE=`graph_wrangler get_node_shape.py out/net_tf.pb $INPUT_NODE`
 INPUT_SHAPE=${INPUT_SHAPE//'?'/1}
-pb_creator --shape="${INPUT_SHAPE//[$'\t\r\n ']}" --value="$VNNCENTER" --output="initial_activation_point.pb"
-INITIAL_POINT="initial_activation_point.pb"
+pb_creator --shape="${INPUT_SHAPE//[$'\t\r\n ']}" --value="$VNNCENTER" --output="out/initial_activation_point.pb"
+INITIAL_POINT="out/initial_activation_point.pb"
 
 
 # Write config file
-cat > verapak.conf <<-END
+cat > out/verapak.conf <<-END
 # Output Directory
 /out
 
 # Graph
-__net_tf.pb
+out/__net_tf.pb
  # Input Node <string>
 ${NODES_PARSED[0]}
  # Output Node <string>
