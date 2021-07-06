@@ -99,14 +99,14 @@ INITIAL_POINT="out/initial_activation_point.pb"
 # Write config file
 cat > out/verapak.conf <<-END
 # Output Directory
-/out
+out/
 
 # Graph
 out/__net_tf.pb
  # Input Node <string>
-${NODES_PARSED[0]}
+$INPUT_NODE
  # Output Node <string>
-${NODES_PARSED[1]}
+$OUTPUT_NODE
  # Verification Radi(us/i) <float> (applied to all dims) or <float[]> (one per dim)
 $VNNRADII
  # Granularity <float> (applied to all dims) or <float[]> (one per dim)
