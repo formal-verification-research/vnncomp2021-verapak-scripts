@@ -43,14 +43,14 @@ fi
 VNNNUM=${VNN_PARSED[3]/'N:'/''}
 
 # Convert ONNX to TF
-. components/convert_onnx.sh v1 $ONNX_FILE out/net_tf.pb
+. components/convert_onnx.sh v1 $ONNX_FILE out/net_tf.pb | tee -a verapak.log | grep INFO
 
 # Wrangle the graph to have compatible nodes
 echo "Wrangle net_tf.pb -> __net_tf.pb"
 if [ $VNNTYPE == 2 ]; then
-	. components/wrangle.sh v1 out/net_tf.pb out/__net_tf.pb True # Negate it so that it does minimal instead of maximal
+	. components/wrangle.sh v1 out/net_tf.pb out/__net_tf.pb True >> verapak.log # Negate it so that it does minimal instead of maximal
 else
-	. components/wrangle.sh v1 out/net_tf.pb out/__net_tf.pb
+	. components/wrangle.sh v1 out/net_tf.pb out/__net_tf.pb >> verapak.log
 fi
 
 
@@ -88,13 +88,11 @@ if [ "$CLASS_AVG_PATH" == "" ] ; then
 	fi
 fi
 
-
 # Generate Initial Activation Point
 INPUT_SHAPE=`graph_wrangler get_node_shape.py out/net_tf.pb $INPUT_NODE`
 INPUT_SHAPE=${INPUT_SHAPE//'?'/1}
 pb_creator --shape="${INPUT_SHAPE//[$'\t\r\n ']}" --value="$VNNCENTER" --output="out/initial_activation_point.pb"
 INITIAL_POINT="out/initial_activation_point.pb"
-
 
 # Write config file
 cat > out/verapak.conf <<-END

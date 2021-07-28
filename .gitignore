@@ -1,5 +1,7 @@
 *.pyc
 *.swp
 verapak.conf
+results.txt
 out/*
-ARFramework/*
+lib/ARFramework
+verapak.log

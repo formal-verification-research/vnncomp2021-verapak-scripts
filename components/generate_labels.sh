@@ -5,12 +5,12 @@ VERSION_STRING=v1
 
 # check arguments
 if [ "$1" != ${VERSION_STRING} ]; then
-	echo "Expected first argument to be the version string '$VERSION_STRING', instead got '$1'"
+	echo "Expected first argument to be the version string '$VERSION_STRING', instead got '$1'" 1>&2
 	exit 1
 fi
 
 if [ "$#" -ne 4 ]; then
-	echo "Expected 4 arguments (got $#): \"$VERSION_STRING\" <labels_out.pb> <shape> <intended_index>"
+	echo "Expected 4 arguments (got $#): \"$VERSION_STRING\" <labels_out.pb> <shape> <intended_index>" 1>&2
 	exit 1
 fi
 

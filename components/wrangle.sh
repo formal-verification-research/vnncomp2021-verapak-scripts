@@ -5,12 +5,12 @@ VERSION_STRING=v1
 
 # check arguments
 if [ "$1" != ${VERSION_STRING} ]; then
-	echo "Expected first argument to be the version string '$VERSION_STRING', instead got '$1'"
+	echo "Expected first argument to be the version string '$VERSION_STRING', instead got '$1'" 1>&2
 	exit 1
 fi
 
 if [[ "$#" -ne 3 && "$#" -ne 4 ]]; then
-	echo "Expected 3 or 4 arguments (got $#): \"$VERSION_STRING\" <in.pb> <out.pb> [negate : bool]"
+	echo "Expected 3 or 4 arguments (got $#): \"$VERSION_STRING\" <in.pb> <out.pb> [negate : bool]" 1>&2
 	exit 1
 fi
 
