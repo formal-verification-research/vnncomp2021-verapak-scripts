@@ -35,13 +35,13 @@ echo "Running benchmark instance in category '$CATEGORY' with onnx file '$ONNX_F
 readarray -t parameters <<< `grep -v "^[[:space:]]*#" $CONFIG_FILE | grep -v "^[[:space:]]*$"`
 
 # Run the tool
-if [ "${parameters[4]}" == *","* ] ; then
+if [[ "${parameters[4]}" == *","* ]] ; then
 	radius_flag="verification_radius_array"
 else
 	radius_flag="verification_radius"
 fi
 
-if [ "${parameters[5]}" == *","* ] ; then
+if [[ "${parameters[5]}" == *","* ]] ; then
 	granularity_flag="granularity_array"
 else
 	granularity_flag="granularity"
