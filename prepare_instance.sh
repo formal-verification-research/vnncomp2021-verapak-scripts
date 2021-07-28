@@ -62,10 +62,10 @@ OUTPUT_NODE=${PER_BENCHMARK[6]}
 
 # Find unspecified nodes
 if [ "$INPUT_NODE" == "" ] ; then
-	INPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --input out/net_tf.pb`
+	INPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --input out/net_tf.pb | tr -d [:space:]`
 fi
 if [ "$OUTPUT_NODE" == "" ] ; then
-	OUTPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --output out/net_tf.pb`
+	OUTPUT_NODE=`graph_wrangler parse_nodes.py --disallow_prompt_user --output out/net_tf.pb | tr -d [:space:]`
 fi
 
 echo "Input $INPUT_NODE, Output $OUTPUT_NODE"
